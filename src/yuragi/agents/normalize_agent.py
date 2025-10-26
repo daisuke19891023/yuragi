@@ -23,6 +23,7 @@ from agents import Agent
 from agents.tracing import agent_span, function_span, generation_span, trace
 
 from yuragi.core.models import CRUDAction, CRUDActionList, CodeLocation
+from yuragi.core.safety import scrub_for_logging
 
 CRUDVerb = Literal["INSERT", "UPDATE", "DELETE", "SELECT"]
 
@@ -302,7 +303,11 @@ class NormalizeAgent:
                     {"role": "user", "content": req.description} for req in coerced_requests
                 ]
                 generation_outputs = [action.model_dump() for action in result.actions]
-                with generation_span(input=generation_inputs, output=generation_outputs, model=None):
+                with generation_span(
+                    input=scrub_for_logging(generation_inputs),
+                    output=scrub_for_logging(generation_outputs),
+                    model=None,
+                ):
                     pass
         return result
 
@@ -313,25 +318,29 @@ class NormalizeAgent:
         default_service: str | None,
     ) -> CRUDAction:
         text = request.description
-        with function_span("infer_action", input=text) as span:
+        with function_span("infer_action", input=scrub_for_logging(text)) as span:
             action, action_score = self._infer_action(text)
-            span.span_data.output = action
+            span.span_data.output = scrub_for_logging(action)
 
-        with function_span("infer_table", input=text) as span:
+        with function_span("infer_table", input=scrub_for_logging(text)) as span:
             table, table_score = self._infer_table(text, request.table_hint, glossary)
-            span.span_data.output = table
+            span.span_data.output = scrub_for_logging(table)
 
-        with function_span("infer_service", input=text) as span:
+        with function_span("infer_service", input=scrub_for_logging(text)) as span:
             service, service_score = self._infer_service(text, request.service, glossary, default_service)
-            span.span_data.output = service
+            span.span_data.output = scrub_for_logging(service)
 
-        with function_span("infer_columns", input=text) as span:
+        with function_span("infer_columns", input=scrub_for_logging(text)) as span:
             columns = self._infer_columns(text, request.columns_hint, glossary)
-            span.span_data.output = ", ".join(columns) if columns else ""
+            span.span_data.output = scrub_for_logging(
+                ", ".join(columns) if columns else "",
+            )
 
-        with function_span("infer_where", input=text) as span:
+        with function_span("infer_where", input=scrub_for_logging(text)) as span:
             where_keys = self._infer_where_keys(text, request.where_hint, glossary)
-            span.span_data.output = ", ".join(where_keys) if where_keys else ""
+            span.span_data.output = scrub_for_logging(
+                ", ".join(where_keys) if where_keys else "",
+            )
 
         confidence = min(1.0, 0.35 + action_score + table_score + service_score)
         return CRUDAction(
