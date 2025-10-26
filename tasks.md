@@ -67,6 +67,7 @@
 - **内容**: repo/db を直列で呼び、Evidence を集約し confidence 更新。
 - **DoD**: 偽陽性候補が検証で除外される。
 - **Acceptance**: 重要エッジが `confidence >= 0.7` に到達。
+- **ステータス**: ✅ リポジトリ／DB 検証エージェントを実装し、エビデンス集約と信頼度更新テストを追加済み。
 
 ## T11. オーケストレータ（`agents/orchestrator.py`）
 - **内容**: Normalize→Verify の handoff、再試行、Evidence 必須、閾値適用。
