@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from yuragi.core.models import CRUDAction
+from yuragi.core.safety import GUARD_SYSTEM_MESSAGE
 from yuragi.llm import LLMClient, StructuredOutputError, StructuredOutputGenerator
 
 if TYPE_CHECKING:
@@ -142,3 +143,43 @@ def test_structured_generator_raises_after_exhausting_retries() -> None:
     error = excinfo.value
     assert "schema" in str(error).lower()
     assert error.raw_response == "{}"
+
+
+def test_structured_generator_injects_json_guard_message() -> None:
+    """A system guard instructs the model to produce JSON-only outputs."""
+    responses = [FakeResponse(_make_valid_payload(service="svc", table="tbl", path="x.py"))]
+    stub = StubOpenAI(responses)
+    typed_client = typing.cast("OpenAIClientProtocol", stub)
+    client = LLMClient(client=typed_client, max_retries=1)
+    generator = StructuredOutputGenerator(client, CRUDAction)
+
+    generator.generate(prompt=[{"role": "user", "content": "return data"}])
+
+    request_kwargs = stub.responses.calls[0]
+    guarded_input = request_kwargs["input"]
+    assert isinstance(guarded_input, list)
+    assert guarded_input[0]["role"] == GUARD_SYSTEM_MESSAGE["role"]
+    assert guarded_input[0]["content"] == GUARD_SYSTEM_MESSAGE["content"]
+
+
+def test_structured_generator_masks_sensitive_raw_response() -> None:
+    """PII contained in invalid responses should be redacted in error payloads."""
+    sensitive = json.dumps(
+        {
+            "service": "orders",
+            "contact_email": "ops@example.com",
+            "note": "Call +1 555 000 1111 immediately",
+        },
+    )
+    stub = StubOpenAI([FakeResponse(sensitive), FakeResponse(sensitive)])
+    typed_client = typing.cast("OpenAIClientProtocol", stub)
+    client = LLMClient(client=typed_client, max_retries=2)
+    generator = StructuredOutputGenerator(client, CRUDAction)
+
+    with pytest.raises(StructuredOutputError) as excinfo:
+        generator.generate(prompt="normalize")
+
+    raw_response = excinfo.value.raw_response
+    assert "ops@example.com" not in raw_response
+    assert "555" not in raw_response
+    assert "[redacted]" in raw_response

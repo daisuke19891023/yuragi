@@ -23,6 +23,7 @@ from yuragi.agents import (
 )
 # The CLI surfaces high-level entry points and therefore imports orchestration
 # utilities lazily to avoid leaking lower-level implementation details.
+from yuragi.core.safety import mask_pii, scrub_for_logging
 from yuragi.core.schema import build_graph_json_schema
 from yuragi.pipelines import CrudNormalizationPipeline, PipelineOutput, PipelineOutputFormat
 from yuragi.tools.db import (
@@ -767,12 +768,13 @@ def _write_json_output(payload: Any, output_path: str | None) -> None:
 def _emit_error(error: CliError) -> None:
     payload = {
         "status": "error",
-        "message": str(error),
+        "message": mask_pii(str(error)),
         "type": type(error).__name__,
     }
     if error.details is not None:
-        payload["details"] = error.details
-    serialized = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        payload["details"] = scrub_for_logging(error.details)
+    safe_payload = scrub_for_logging(payload)
+    serialized = json.dumps(safe_payload, ensure_ascii=False, sort_keys=True)
     sys.stderr.write(serialized + "\n")
     sys.stderr.flush()
 

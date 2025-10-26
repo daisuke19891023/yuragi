@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import typing
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
 
 from .client import LLMClient, LLMClientError, LLMMaxRetriesExceededError, RetryableLLMError
+from yuragi.core.safety import GUARD_SYSTEM_MESSAGE, mask_pii
 
 
 class StructuredOutputError(LLMClientError):
@@ -16,7 +18,7 @@ class StructuredOutputError(LLMClientError):
     def __init__(self, message: str, *, raw_response: str, validation_error: ValidationError) -> None:
         """Store details about the failed structured output."""
         super().__init__(message)
-        self.raw_response = raw_response
+        self.raw_response = mask_pii(raw_response)
         self.validation_error = validation_error
 
 
@@ -26,7 +28,7 @@ class StructuredOutputValidationError(RetryableLLMError):
     def __init__(self, raw_response: str, validation_error: ValidationError) -> None:
         """Capture the raw response and associated validation error."""
         super().__init__("LLM response failed schema validation")
-        self.raw_response = raw_response
+        self.raw_response = mask_pii(raw_response)
         self.validation_error = validation_error
 
 
@@ -63,10 +65,11 @@ class StructuredOutputGenerator[T: BaseModel]:
         last_validation_error: StructuredOutputValidationError | None = None
 
         def _invoke() -> T:
+            guarded_input = _prepare_prompt_input(prompt)
             response = self._client.create_response(
                 model=model,
                 response_format=self._response_format,
-                input=prompt,
+                input=guarded_input,
                 **kwargs,
             )
             raw_text = self._client.extract_output_text(response)
@@ -89,6 +92,34 @@ class StructuredOutputGenerator[T: BaseModel]:
                 raw_response=last_validation_error.raw_response,
                 validation_error=last_validation_error.validation_error,
             ) from last_validation_error
+
+
+def _prepare_prompt_input(prompt: Sequence[dict[str, Any]] | str) -> list[dict[str, Any]]:
+    """Return a message sequence prefixed with the JSON-only guard rail."""
+    if isinstance(prompt, str):
+        messages: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
+    else:
+        messages = []
+        candidate_sequence = typing.cast(Sequence[Any], prompt)
+        for index, item in enumerate(candidate_sequence):
+            if not isinstance(item, Mapping):
+                message = (
+                    "Prompt sequences must contain mapping objects, "
+                    f"encountered {type(item)!r} at index {index}"
+                )
+                raise TypeError(message)
+            mapping_item = typing.cast(Mapping[str, Any], item)
+            messages.append(dict(mapping_item))
+
+    if messages:
+        first = messages[0]
+        if (
+            first.get("role") == GUARD_SYSTEM_MESSAGE["role"]
+            and first.get("content") == GUARD_SYSTEM_MESSAGE["content"]
+        ):
+            return messages
+
+    return [dict(GUARD_SYSTEM_MESSAGE), *messages]
 
 
 __all__ = [
