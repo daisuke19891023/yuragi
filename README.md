@@ -1,0 +1,1 @@
+# python-vibe-coding-template
