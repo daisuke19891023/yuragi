@@ -43,6 +43,7 @@
 - **内容**: `introspect_table/columns`, `explain(sql)` の抽象 I/F（PostgreSQL 実装）。
 - **DoD**: ローカル PG（docker）で e2e テスト。
 - **Acceptance**: 存在しないテーブルでは negative result を返し、confidence が下がる。
+- **ステータス**: ✅ SQLite/Factory 経由での DB アダプタ実装とネガティブ結果のペナルティを追加し、SQLite 経路のテストを整備。
 
 ## T7. 仕様差分取り込み（`tools/specs.py`）
 - **内容**: `oasdiff`/`buf`/`graphql-inspector` 出力のパースと正規化。
