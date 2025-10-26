@@ -5,19 +5,22 @@
 > 既存の pyproject.toml／noxfile.py／GitHub Actions 雛形は 流用します。ここでは本プロジェクト固有のタスクのみ。
 
 ## T0. 依存・pyright 準備
-- **内容**: `openai`, `openai-agents`, `pydantic>=2`, `httpx`, `tenacity`, `rich`, `pyright`, `pytest`, `jsonschema` を追加。`pyrightconfig.json` を `typeCheckingMode="strict"` で配置。
+- **内容**: `openai`, `openai-agents`, `pydantic>=2`, `httpx`, `tenacity`, `rich`, `pyright`, `pytest`, `jsonschema` を追加。型チェック設定は `pyproject.toml` の `[tool.pyright]` に集約。
 - **DoD**: ローカルで `pyright` & `pytest -q` が成功。
 - **Acceptance**: CI（雛形）で `pyright` 0 エラー・テスト緑。
+- **ステータス**: ✅ 依存関係を整理し、`pyproject.toml` で Pyright strict を設定済み（pyright / pytest 実行済み）。
 
 ## T1. Pydantic ドメインモデル（`core/models.py`）
 - **内容**: `Node`/`Edge`/`Evidence`/`CRUDAction`/`Graph` と列挙型 `NodeType`/`EdgeType` を定義。
 - **DoD**: `model_json_schema()` の出力が JSON Schema 検証を通過。
 - **Acceptance**: サンプル Graph（10 ノード/20 エッジ）が round-trip 復元可。
+- **ステータス**: ✅ Pydantic モデル一式を実装し、ラウンドトリップテストを追加済み。
 
 ## T2. スキーマユーティリティ（`core/schema.py`）
 - **内容**: Schema エクスポート、`schema_version` 埋め込み、破壊変更差分の検知。
 - **DoD**: フィールド追加/削除/型変更の検知テスト。
 - **Acceptance**: `yuragi schema export > schema.json` が Structured Outputs にそのまま渡せる（OpenAI SDK で使用可）。
+- **ステータス**: ✅ スキーマエクスポートと差分検知を実装し、検知テストを整備済み。
 
 ## T3. LLM クライアント & 構造化出力（`llm/client.py`, `llm/structured.py`）
 - **内容**: OpenAI SDK ラッパ（再試行・タイムアウト・ログ）。Pydantic スキーマを `response_format=json_schema` で指定し、strict な構造化出力を取得。
