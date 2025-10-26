@@ -473,7 +473,7 @@ def _build_repository(args: argparse.Namespace) -> RepositorySearcher:
     if isinstance(repo_fixture, str) and repo_fixture:
         return _build_fixture_repository(Path(repo_fixture))
     command = _build_repo_command(args)
-    allowed = _resolve_allowed_commands()
+    allowed = resolve_repo_allowed_commands()
     cwd: Path | None = None
     repo_cwd = getattr(args, "repo_cwd", None)
     if isinstance(repo_cwd, str) and repo_cwd:
@@ -504,7 +504,7 @@ def _build_repo_command(args: argparse.Namespace) -> list[str]:
     return command
 
 
-def _resolve_allowed_commands() -> set[str]:
+def resolve_repo_allowed_commands() -> set[str]:
     env_value = os.environ.get("YURAGI_REPO_ALLOW_CMDS")
     if env_value:
         return _normalize_allowlist(env_value)

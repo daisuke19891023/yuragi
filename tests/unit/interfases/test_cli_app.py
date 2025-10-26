@@ -3,17 +3,13 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from collections.abc import Callable
-from typing import cast
-
 import pytest
 
 from yuragi.interfases.cli import app
 
 cli_main = app.main
 CliError = app.CliError
-ResolveAllowedCommands = Callable[[], set[str]]
-resolve_allowed_commands = cast(ResolveAllowedCommands, getattr(app, "_resolve_allowed_commands"))
+resolve_allowed_commands = app.resolve_repo_allowed_commands
 
 
 @pytest.fixture(scope="module")
