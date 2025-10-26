@@ -49,6 +49,7 @@
 - **内容**: `oasdiff`/`buf`/`graphql-inspector` 出力のパースと正規化。
 - **DoD**: 3 形式をパースできる。
 - **Acceptance**: 破壊変更で `CALLS` 影響エッジが生成される。
+- **ステータス**: ✅ 3 種のツール出力を正規化し、破壊変更を CALLS エッジへ変換する実装とテストを追加。
 
 ## T8. 実行時根拠（`tools/runtime.py`）
 - **内容**: `pg_stat_statements`／OTel ライク JSON → READS/WRITES/CALLS の実在フラグ。

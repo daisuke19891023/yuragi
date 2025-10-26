@@ -230,20 +230,19 @@ class PostgresDatabaseAdapter:
             "SELECT COUNT(1) FROM information_schema.tables "
             "WHERE table_schema = %s AND table_name = %s"
         )
-        with closing(self._connect()) as connection:
-            with connection.cursor() as cursor:
-                sql_module = self._sql
-                cursor.execute(exists_query, (schema_filter, safe_table))
-                exists = bool(cursor.fetchone()[0])
-                row_count: int | None = None
-                if exists:
-                    count_query = sql_module.SQL("SELECT COUNT(1) FROM {}.{}").format(
-                        sql_module.Identifier(schema_filter),
-                        sql_module.Identifier(safe_table),
-                    )
-                    cursor.execute(count_query)
-                    count_row = cursor.fetchone()
-                    row_count = int(count_row[0]) if count_row is not None else 0
+        with closing(self._connect()) as connection, connection.cursor() as cursor:
+            sql_module = self._sql
+            cursor.execute(exists_query, (schema_filter, safe_table))
+            exists = bool(cursor.fetchone()[0])
+            row_count: int | None = None
+            if exists:
+                count_query = sql_module.SQL("SELECT COUNT(1) FROM {}.{}").format(
+                    sql_module.Identifier(schema_filter),
+                    sql_module.Identifier(safe_table),
+                )
+                cursor.execute(count_query)
+                count_row = cursor.fetchone()
+                row_count = int(count_row[0]) if count_row is not None else 0
         confidence_delta = 0.0 if exists else NEGATIVE_RESULT_CONFIDENCE_DELTA
         return TableIntrospectionResult(
             safe_table,
