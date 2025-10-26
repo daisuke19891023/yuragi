@@ -73,6 +73,7 @@
 - **内容**: Normalize→Verify の handoff、再試行、Evidence 必須、閾値適用。
 - **DoD**: 例外時のフォールバックと再試行。
 - **Acceptance**: `Runner.run(...)` で end-to-end 完走（CLI/MCP からも同経路）。
+- **ステータス**: ✅ Normalize/Verify の連結オーケストレータを実装し、閾値・Evidence 必須・リトライ／フォールバック挙動をテストで検証済み。
 
 ## T12. パイプライン（`pipelines/crud_normalize.py`）
 - **内容**: 入力→LLM→検証→グラフ→出力（JSON/NDJSON）。
