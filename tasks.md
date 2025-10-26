@@ -91,6 +91,7 @@
 - **内容**: `make_exposure("cli"|"mcp")` 実装。`YURAGI_EXPOSE` で切替。
 - **DoD**: ユニットテスト（未知値で例外／既知値で所定の型インスタンス）。
 - **Acceptance**: `python -m yuragi` で Factory が起動し、cli/mcp のいずれかが動作。
+- **ステータス**: ✅ Factory を実装し、環境変数で CLI/MCP の切替とユニットテストを追加済み。
 
 ## T15. FastMCP サーバ（stdio）（`interfases/mcp/server_fastmcp.py`）
 - **内容**: `FastMCP("yuragi")` で MCP ツールを公開：

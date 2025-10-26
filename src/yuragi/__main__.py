@@ -1,18 +1,30 @@
-"""Entry point for the yuragi CLI."""
+"""Entry point for the yuragi interfaces."""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, NoReturn
 
-from yuragi.interfases.cli.app import main as cli_main
+from yuragi.interfases.factory import resolve_exposure_from_environment
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from typing import Any
+    from collections.abc import Mapping
 
 
 def main(argv: Sequence[str] | None = None) -> NoReturn:
-    """Delegate to the CLI implementation and terminate with its exit code."""
-    raise SystemExit(cli_main(argv))
+    """Resolve the requested exposure and delegate execution to it."""
+    try:
+        exposure = resolve_exposure_from_environment()
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+
+    config: Mapping[str, Any] | None = None
+    if argv is not None:
+        config = {"argv": list(argv)}
+
+    exposure.serve(config=config)
+    raise SystemExit(0)
 
 
 if __name__ == "__main__":  # pragma: no cover - manual execution guard
