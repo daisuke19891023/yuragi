@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from agents.tracing import agent_span, function_span, trace
 
+from yuragi.core.errors import OrchestrationError
 from yuragi.core.models import CRUDAction, CRUDActionList, Edge, Graph
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
@@ -17,11 +18,6 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     from yuragi.agents.normalize_agent import NormalizationRequest, NormalizeAgent, TermGlossary
     from yuragi.agents.verify_agent import VerifyAgent
     from yuragi.tools.repo import SearchQuery
-
-
-class OrchestrationError(RuntimeError):
-    """Raised when the orchestrator cannot recover from repeated failures."""
-
 
 def _clone_edge(edge: Edge) -> Edge:
     """Return a shallow copy of *edge* to avoid mutating the source graph."""

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from yuragi.core.errors import ExposureConfigurationError
 from yuragi.interfases.cli.app import CLIExposure
 from yuragi.interfases.factory import (
     make_exposure,
@@ -24,8 +25,8 @@ def test_make_exposure_known_kinds(kind: str) -> None:
 
 
 def test_make_exposure_unknown_kind() -> None:
-    """Unknown exposure kinds raise a ValueError."""
-    with pytest.raises(ValueError, match="unknown exposure kind: unknown"):
+    """Unknown exposure kinds raise a configuration error."""
+    with pytest.raises(ExposureConfigurationError, match="unknown exposure kind: unknown"):
         make_exposure("unknown")
 
 
@@ -48,8 +49,8 @@ def test_resolve_exposure_reads_environment(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def test_resolve_exposure_invalid_environment(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Invalid environment values propagate as ValueError."""
+    """Invalid environment values propagate as configuration errors."""
     monkeypatch.setenv("YURAGI_EXPOSE", "invalid")
 
-    with pytest.raises(ValueError, match="unknown exposure kind: invalid"):
+    with pytest.raises(ExposureConfigurationError, match="unknown exposure kind: invalid"):
         resolve_exposure_from_environment()
