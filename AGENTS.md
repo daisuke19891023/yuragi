@@ -1,6 +1,6 @@
 # AGENTS.md (Python, for Codex-like agents)
 
-Authoritative guide for code-writing agents working on this Python repository. Targets Python 3.13+ with uv, Pydantic v2, Nox, Pytest, Ruff, Pyright, and Git.
+Authoritative guide for code-writing agents working on this Python repository. Targets Python 3.13+ with uv, Pydantic v2, Nox, Pytest, Ruff, Pyright, and Git. プロジェクト全体の要件・背景は必ず `spec.md` を参照し、変更や検討内容を進めた際は `tasks.md` にタスク更新・アップデート内容を追記してください。
 
 ## 1. Ground Rules (non-negotiable)
 - **Dependency management:** use `uv` only (pip and Poetry are prohibited).
