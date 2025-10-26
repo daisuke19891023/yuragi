@@ -217,6 +217,12 @@ Each tool accepts the same payloads used in the Python/CLI samples. Point the
 client to the fixtures in `samples/` for deterministic responses (for example,
 pass `repo_opts.fixture.hits` from `samples/repo_hits.json`).
 
+Database verification in FastMCP runs against fixtures by default. Servers may
+optionally supply a `database_allowlist` during startup, enabling clients to
+request one of the pre-approved presets via `db_opts.preset`. Custom
+`engine`/`dsn`/`database` values from the client are rejected to prevent
+untrusted connections.
+
 To switch back to the CLI exposure, either unset `YURAGI_EXPOSE` or set it to
 `cli` before running `python -m yuragi`.
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, cast
 from collections.abc import Mapping, Sequence
 
@@ -233,6 +233,30 @@ class DatabaseFixturePayload(BaseModel):
     columns: dict[str, ColumnFixturePayload] = Field(default_factory=dict)
 
 
+class AllowedDatabaseConfig(BaseModel):
+    """Allowlisted database configuration the server trusts."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    engine: str
+    database: str | None = None
+    dsn: str | None = None
+    uri: bool = False
+
+    def create_adapter(self) -> DatabaseAdapter:
+        """Instantiate an adapter using the allowlisted configuration."""
+        return create_database_adapter(
+            self.engine,
+            database=self.database,
+            dsn=self.dsn,
+            uri=self.uri,
+        )
+
+
+def _empty_allowed_database_configs() -> dict[str, AllowedDatabaseConfig]:
+    return {}
+
+
 class DatabaseOptions(BaseModel):
     """Options controlling database verification behaviour."""
 
@@ -244,20 +268,49 @@ class DatabaseOptions(BaseModel):
     dsn: str | None = None
     uri: bool = False
     schema_name: str | None = Field(default=None, alias="schema")
+    preset: str | None = None
 
-    def build(self) -> tuple[DatabaseAdapter, str | None]:
+    def build(
+        self,
+        allowlist: Mapping[str, AllowedDatabaseConfig] | None = None,
+    ) -> tuple[DatabaseAdapter, str | None]:
         """Return a database adapter and the requested schema namespace."""
+        disallowed_fields = [
+            name
+            for name, value in (
+                ("engine", self.engine),
+                ("database", self.database),
+                ("dsn", self.dsn),
+                ("uri", True if self.uri else None),
+            )
+            if value is not None
+        ]
+        if disallowed_fields:
+            formatted = ", ".join(disallowed_fields)
+            message = (
+                "Custom database configuration is not permitted for FastMCP "
+                f"(received {formatted}). Use fixtures or an allowlisted preset"
+            )
+            raise ValueError(message)
+
+        if self.fixture is not None and self.preset is not None:
+            message = "Database fixture and preset cannot be combined"
+            raise ValueError(message)
+
         if self.fixture is not None:
             adapter = _FixtureDatabaseAdapter(self.fixture)
-        elif self.engine is not None:
-            adapter = create_database_adapter(
-                self.engine,
-                database=self.database,
-                dsn=self.dsn,
-                uri=self.uri,
-            )
-        else:
-            adapter = _FixtureDatabaseAdapter(DatabaseFixturePayload())
+            return adapter, self.schema_name
+
+        if self.preset is not None:
+            allowlist = allowlist or {}
+            config = allowlist.get(self.preset)
+            if config is None:
+                message = f"Database preset {self.preset!r} is not permitted"
+                raise ValueError(message)
+            adapter = config.create_adapter()
+            return adapter, self.schema_name
+
+        adapter = _FixtureDatabaseAdapter(DatabaseFixturePayload())
         return adapter, self.schema_name
 
 
@@ -281,6 +334,9 @@ class MCPRuntime:
     """Stateful helpers shared between FastMCP tool invocations."""
 
     normalize_agent: NormalizeAgent
+    database_allowlist: Mapping[str, AllowedDatabaseConfig] = field(
+        default_factory=_empty_allowed_database_configs,
+    )
 
     def normalize_crud(
         self,
@@ -407,7 +463,7 @@ class MCPRuntime:
 
     def _build_database(self, options: DatabaseOptions | None) -> tuple[DatabaseAdapter, str | None]:
         settings = options or DatabaseOptions()
-        return settings.build()
+        return settings.build(self.database_allowlist)
 
 
 class _FixtureDatabaseAdapter(DatabaseAdapter):
@@ -512,7 +568,22 @@ class MCPExposure:
 
     def serve(self, *, config: Mapping[str, Any] | None = None) -> None:
         """Start the FastMCP server and publish the yuragi tools."""
-        self._runtime = MCPRuntime(normalize_agent=NormalizeAgent())
+        allowlist: dict[str, AllowedDatabaseConfig] = {}
+        if config is not None:
+            raw_allowlist = config.get("database_allowlist")
+            if raw_allowlist is not None:
+                if not isinstance(raw_allowlist, Mapping):
+                    message = "database_allowlist must be a mapping of preset names to configurations"
+                    raise ValueError(message)
+                allowlist = {
+                    str(name): AllowedDatabaseConfig.model_validate(value)
+                    for name, value in cast("Mapping[str, Any]", raw_allowlist).items()
+                }
+
+        self._runtime = MCPRuntime(
+            normalize_agent=NormalizeAgent(),
+            database_allowlist=allowlist,
+        )
         try:
             strict_validation = True
             show_banner = True

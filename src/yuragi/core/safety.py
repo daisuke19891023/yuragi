@@ -36,23 +36,23 @@ def scrub_for_logging(value: Any, *, max_length: int = 512) -> Any:
         processed = mask_pii(value.decode("utf-8", errors="ignore"), max_length=max_length)
     elif isinstance(value, Mapping):
         processed_mapping: dict[Any, Any] = {}
-        mapping_items = typing.cast(Mapping[Any, Any], value)
+        mapping_items = typing.cast("Mapping[Any, Any]", value)
         for key, item in mapping_items.items():
             processed_mapping[key] = scrub_for_logging(item, max_length=max_length)
         processed = processed_mapping
     elif isinstance(value, list):
-        list_items = typing.cast(list[Any], value)
+        list_items = typing.cast("list[Any]", value)
         processed = [scrub_for_logging(item, max_length=max_length) for item in list_items]
     elif isinstance(value, tuple):
-        tuple_items = typing.cast(tuple[Any, ...], value)
+        tuple_items = typing.cast("tuple[Any, ...]", value)
         processed = tuple(
             scrub_for_logging(item, max_length=max_length) for item in tuple_items
         )
     elif isinstance(value, AbstractSet):
-        set_items = typing.cast(AbstractSet[Any], value)
+        set_items = typing.cast("AbstractSet[Any]", value)
         processed = {scrub_for_logging(item, max_length=max_length) for item in set_items}
     elif isinstance(value, Sequence):
-        sequence_items = typing.cast(Sequence[Any], value)
+        sequence_items = typing.cast("Sequence[Any]", value)
         processed = [
             scrub_for_logging(item, max_length=max_length) for item in sequence_items
         ]

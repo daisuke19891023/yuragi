@@ -100,7 +100,7 @@ def _prepare_prompt_input(prompt: Sequence[dict[str, Any]] | str) -> list[dict[s
         messages: list[dict[str, Any]] = [{"role": "user", "content": prompt}]
     else:
         messages = []
-        candidate_sequence = typing.cast(Sequence[Any], prompt)
+        candidate_sequence = typing.cast("Sequence[Any]", prompt)
         for index, item in enumerate(candidate_sequence):
             if not isinstance(item, Mapping):
                 message = (
@@ -108,7 +108,7 @@ def _prepare_prompt_input(prompt: Sequence[dict[str, Any]] | str) -> list[dict[s
                     f"encountered {type(item)!r} at index {index}"
                 )
                 raise TypeError(message)
-            mapping_item = typing.cast(Mapping[str, Any], item)
+            mapping_item = typing.cast("Mapping[str, Any]", item)
             messages.append(dict(mapping_item))
 
     if messages:
