@@ -1,0 +1,15 @@
+{
+  "service_aliases": {
+    "billing": "BillingService",
+    "billing service": "BillingService"
+  },
+  "table_aliases": {
+    "billing ledger": "billing_ledger",
+    "ledger": "billing_ledger",
+    "ledger table": "billing_ledger"
+  },
+  "column_aliases": {
+    "checkout total": "checkout_total",
+    "order identifier": "order_id"
+  }
+}

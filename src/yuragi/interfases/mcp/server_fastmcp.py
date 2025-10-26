@@ -526,7 +526,7 @@ class MCPExposure:
                     transport = config.get("transport")
                 raw_transport_kwargs = config.get("transport_kwargs")
                 if isinstance(raw_transport_kwargs, Mapping):
-                    transport_kwargs = dict(cast(Mapping[str, Any], raw_transport_kwargs))
+                    transport_kwargs = dict(cast("Mapping[str, Any]", raw_transport_kwargs))
 
             self._mcp.strict_input_validation = strict_validation
             self._mcp.run(transport=transport, show_banner=show_banner, **transport_kwargs)
