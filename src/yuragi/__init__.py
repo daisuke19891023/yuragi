@@ -2,6 +2,7 @@
 
 from .core.models import (
     CRUDAction,
+    CRUDActionList,
     CodeLocation,
     Edge,
     EdgeType,
@@ -16,6 +17,7 @@ from .core.models import (
 __all__ = [
     "DEFAULT_SCHEMA_VERSION",
     "CRUDAction",
+    "CRUDActionList",
     "CodeLocation",
     "Edge",
     "EdgeType",

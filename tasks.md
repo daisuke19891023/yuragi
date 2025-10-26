@@ -61,6 +61,7 @@
 - **内容**: `Agent(output_type=CRUDActionList)` を定義。few-shot と用語辞書で曖昧入力を吸収。
 - **DoD**: 3 種の曖昧入力で CRUDAction を最低 1 件以上生成。
 - **Acceptance**: Agents のトレースで手順が可視（SDK のトレーシング確認）。
+- **ステータス**: ✅ 用語辞書＋few-shot 指示で正規化 Agent を実装し、トレーシング経路をテスト済み。
 
 ## T10. Verify Agent（`agents/verify_agent.py`）
 - **内容**: repo/db を直列で呼び、Evidence を集約し confidence 更新。

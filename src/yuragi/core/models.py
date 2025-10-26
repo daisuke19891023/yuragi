@@ -110,6 +110,17 @@ class CRUDAction(BaseModel):
     confidence: float = Field(ge=0.0, le=1.0)
 
 
+def _empty_crud_action_list() -> list[CRUDAction]:
+    """Return a new list for storing CRUD actions."""
+    return []
+
+
+class CRUDActionList(BaseModel):
+    """Collection wrapper used for structured CRUD normalization results."""
+
+    actions: list[CRUDAction] = Field(default_factory=_empty_crud_action_list)
+
+
 def _empty_node_list() -> list[Node]:
     """Return a new list for storing nodes."""
     return []
@@ -165,6 +176,7 @@ class Graph(BaseModel):
 __all__ = [
     "DEFAULT_SCHEMA_VERSION",
     "CRUDAction",
+    "CRUDActionList",
     "CodeLocation",
     "Edge",
     "EdgeType",
