@@ -1,24 +1,24 @@
 [project]
-name = "template-project-placeholder"
+name = "yuragi"
 version = "0.1.0"
-description = "Template project placeholder description"
+description = "Normalize ambiguous evidence into a verified dependency graph"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "python-dotenv>=1.1.1",
-    "pydantic>=2.12.3",
-    "pydantic-settings>=2.11.0",
-    "ulid>=1.1",
+    "httpx>=0.28.1",
+    "jsonschema>=4.25.1",
     "openai>=2.6.1",
     "openai-agents>=0.4.2",
-    "httpx>=0.28.1",
-    "tenacity>=9.1.2",
+    "pydantic>=2.12.3",
+    "pydantic-settings>=2.11.0",
+    "python-dotenv>=1.1.1",
     "rich>=14.2.0",
-    "jsonschema>=4.25.1",
-] # Update as needed for real project requirements
+    "tenacity>=9.1.2",
+    "ulid>=1.1",
+]
 
 [project.scripts]
-template-project-placeholder = "template_package.main:main"  # Replace with actual entry point
+yuragi = "yuragi.__main__:main"
 
 [project.optional-dependencies]
 dev = [
