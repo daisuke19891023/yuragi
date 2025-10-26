@@ -85,6 +85,7 @@
 - **内容**: `yuragi normalize` / `yuragi schema export` / `yuragi run-crud-pipeline`。
 - **DoD**: ヘルプ・終了コード・失敗時 JSON エラー出力。
 - **Acceptance**: サンプル入力から 1 コマンドで `graph.json` を生成。
+- **ステータス**: ✅ CLI サブコマンド・サンプルフィクスチャを実装し、エラー時 JSON 出力と graph.json の生成を確認済み。
 
 ## T14. Factory（`interfases/factory.py`）
 - **内容**: `make_exposure("cli"|"mcp")` 実装。`YURAGI_EXPOSE` で切替。
