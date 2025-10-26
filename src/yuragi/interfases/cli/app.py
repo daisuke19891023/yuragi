@@ -777,4 +777,28 @@ def _emit_error(error: CliError) -> None:
     sys.stderr.flush()
 
 
-__all__ = ["main"]
+__all__ = ["CLIExposure", "main"]
+
+
+class CLIExposure:
+    """Exposure adapter that delegates to the CLI entry point."""
+
+    def serve(self, *, config: Mapping[str, Any] | None = None) -> None:
+        """Execute the CLI using the provided configuration."""
+        argv: Sequence[str] | None = None
+        if config is not None and "argv" in config:
+            raw_argv = config["argv"]
+            if raw_argv is not None:
+                if not isinstance(raw_argv, Sequence) or isinstance(raw_argv, (str, bytes)):
+                    message = "config['argv'] must be a sequence of strings"
+                    raise TypeError(message)
+                sequence_candidate = cast("Sequence[Any]", raw_argv)
+                validated_arguments: list[str] = []
+                for argument in sequence_candidate:
+                    if not isinstance(argument, str):
+                        message = "config['argv'] must contain only strings"
+                        raise TypeError(message)
+                    validated_arguments.append(argument)
+                argv = list(validated_arguments)
+        exit_code = main(argv)
+        raise SystemExit(exit_code)
