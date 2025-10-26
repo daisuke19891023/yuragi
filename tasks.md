@@ -55,6 +55,7 @@
 - **内容**: `pg_stat_statements`／OTel ライク JSON → READS/WRITES/CALLS の実在フラグ。
 - **DoD**: 変換テスト。
 - **Acceptance**: 静的+実行時の合流で confidence が上がる。
+- **ステータス**: ✅ pg_stat_statements と OTel スパン JSON を READS/WRITES/CALLS フラグへ変換し、ユニットテストを追加済み。
 
 ## T9. Normalize Agent（`agents/normalize_agent.py`）
 - **内容**: `Agent(output_type=CRUDActionList)` を定義。few-shot と用語辞書で曖昧入力を吸収。

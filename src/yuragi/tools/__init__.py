@@ -21,6 +21,11 @@ from .repo import (
     RepositorySearcher,
     SearchQuery,
 )
+from .runtime import (
+    RuntimeEdgeFlags,
+    flags_from_otel_spans,
+    flags_from_pg_stat_statements,
+)
 from .specs import (
     SpecChange,
     build_spec_impact_graph,
@@ -43,12 +48,15 @@ __all__ = [
     "RepoAdapterError",
     "RepoHit",
     "RepositorySearcher",
+    "RuntimeEdgeFlags",
     "SQLiteDatabaseAdapter",
     "SearchQuery",
     "SpecChange",
     "TableIntrospectionResult",
     "build_spec_impact_graph",
     "create_database_adapter",
+    "flags_from_otel_spans",
+    "flags_from_pg_stat_statements",
     "parse_buf_breaking",
     "parse_graphql_inspector",
     "parse_oasdiff",
