@@ -79,6 +79,7 @@
 - **内容**: 入力→LLM→検証→グラフ→出力（JSON/NDJSON）。
 - **DoD**: ゴールデンテスト（固定入力→固定出力）。
 - **Acceptance**: 出力 Graph がスキーマ検証 OK、全 Edge に Evidence あり。
+- **ステータス**: ✅ CRUD 正規化パイプラインを実装し、ゴールデンテストとスキーマ検証を通過。
 
 ## T13. CLI（`interfases/cli/app.py`）
 - **内容**: `yuragi normalize` / `yuragi schema export` / `yuragi run-crud-pipeline`。
