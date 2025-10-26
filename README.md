@@ -187,6 +187,32 @@ The fixtures emulate repository/database evidence so the command succeeds
 without external dependencies. Failures are emitted as JSON on stderr along with
 non-zero exit codes.
 
+### Configure repository allowlists
+
+CLI repository searches are restricted to a predefined command allowlist. By
+default only `rg` is permitted. Extend or replace the allowlist by setting the
+`YURAGI_REPO_ALLOW_CMDS` environment variable before invoking the CLI:
+
+```bash
+export YURAGI_REPO_ALLOW_CMDS="rg,git"
+uv run yuragi run-crud-pipeline --requests ... --repo-command git
+```
+
+For shared environments, place the configuration in a JSON file. The CLI looks
+for `~/.config/yuragi/config.json` and can be pointed to an alternate location
+via the `YURAGI_CLI_CONFIG` environment variable. The file must be a JSON
+object; set `repo_allowed_commands` to either a comma-delimited string or an
+array of strings:
+
+```json
+{
+  "repo_allowed_commands": ["rg", "git"]
+}
+```
+
+If both the environment variable and the configuration file are present, the
+environment variable wins.
+
 ## FastMCP(stdio) server
 
 The FastMCP exposure publishes the same capabilities as MCP tools. Set the

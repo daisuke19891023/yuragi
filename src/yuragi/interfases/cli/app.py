@@ -191,7 +191,11 @@ def _configure_run_crud_pipeline(subparsers: Any) -> None:
         "--repo-command",
         "--repo-cmd",
         dest="repo_command",
-        help="Executable used for repository searches (e.g. 'rg').",
+        help=(
+            "Executable used for repository searches (e.g. 'rg'). Allowed commands "
+            "are configured via the YURAGI_REPO_ALLOW_CMDS environment variable or "
+            "the CLI configuration file."
+        ),
     )
     parser.add_argument(
         "--repo-arg",
@@ -233,12 +237,6 @@ def _configure_run_crud_pipeline(subparsers: Any) -> None:
         type=float,
         default=10.0,
         help="Timeout (seconds) applied to CLI repository commands.",
-    )
-    parser.add_argument(
-        "--repo-allowed",
-        dest="repo_allowed",
-        action="append",
-        help="Allowed command names for CLI repository adapters (defaults to env).",
     )
     parser.add_argument(
         "--repo-cwd",
@@ -475,18 +473,22 @@ def _build_repository(args: argparse.Namespace) -> RepositorySearcher:
     if isinstance(repo_fixture, str) and repo_fixture:
         return _build_fixture_repository(Path(repo_fixture))
     command = _build_repo_command(args)
-    allowed = _resolve_allowed_commands(cast("Iterable[str] | None", args.repo_allowed))
+    allowed = resolve_repo_allowed_commands()
     cwd: Path | None = None
     repo_cwd = getattr(args, "repo_cwd", None)
     if isinstance(repo_cwd, str) and repo_cwd:
         cwd = Path(repo_cwd).resolve()
-    adapter = CLIAdapter(
-        command,
-        allowed_commands=allowed,
-        runner=subprocess.run,
-        cwd=cwd,
-        timeout=args.repo_timeout,
-    )
+    try:
+        adapter = CLIAdapter(
+            command,
+            allowed_commands=allowed,
+            runner=subprocess.run,
+            cwd=cwd,
+            timeout=args.repo_timeout,
+        )
+    except ValueError as error:
+        message = str(error)
+        raise CliError(message) from error
     return RepositorySearcher(adapter)
 
 
@@ -502,11 +504,67 @@ def _build_repo_command(args: argparse.Namespace) -> list[str]:
     return command
 
 
-def _resolve_allowed_commands(overrides: Iterable[str] | None) -> set[str]:
-    if overrides:
-        return {item for value in overrides for item in value.split(",") if item}
-    env_value = os.environ.get("YURAGI_REPO_ALLOW_CMDS", "rg")
-    return {item for item in env_value.split(",") if item}
+def resolve_repo_allowed_commands() -> set[str]:
+    env_value = os.environ.get("YURAGI_REPO_ALLOW_CMDS")
+    if env_value:
+        return _normalize_allowlist(env_value)
+    config = _load_cli_config()
+    if config is not None:
+        raw_allowed = config.get("repo_allowed_commands")
+        if raw_allowed is not None:
+            return _normalize_allowlist(raw_allowed)
+    return {"rg"}
+
+
+def _normalize_allowlist(raw_value: object) -> set[str]:
+    if isinstance(raw_value, str):
+        candidates = raw_value.split(",")
+    elif isinstance(raw_value, Iterable):
+        candidates: list[str] = []
+        for item in cast("Iterable[object]", raw_value):
+            if not isinstance(item, str):
+                message = "Allowed commands must be strings"
+                raise CliError(message)
+            candidates.append(item)
+    else:
+        message = "Allowed commands must be provided as a string or sequence of strings"
+        raise CliError(message)
+
+    allowed = {item.strip() for item in candidates if item.strip()}
+    if not allowed:
+        message = "At least one allowed command must be specified"
+        raise CliError(message)
+    return allowed
+
+
+def _load_cli_config() -> Mapping[str, Any] | None:
+    config_env = os.environ.get("YURAGI_CLI_CONFIG")
+    config_path = (
+        Path(config_env).expanduser()
+        if config_env
+        else Path.home() / ".config" / "yuragi" / "config.json"
+    )
+
+    if not config_path.exists():
+        return None
+
+    try:
+        text = config_path.read_text(encoding="utf-8")
+    except OSError as error:
+        message = f"Failed to read CLI configuration from {config_path}: {error}"
+        raise CliError(message) from error
+
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError as error:
+        message = f"Failed to parse CLI configuration from {config_path}: {error}"
+        raise CliError(message) from error
+
+    if not isinstance(payload, Mapping):
+        message = f"CLI configuration at {config_path} must be a JSON object"
+        raise CliError(message)
+
+    return cast("Mapping[str, Any]", payload)
 
 
 def _build_fixture_repository(path: Path) -> RepositorySearcher:

@@ -5,7 +5,11 @@ from pathlib import Path
 
 import pytest
 
-from yuragi.interfases.cli.app import main as cli_main
+from yuragi.interfases.cli import app
+
+cli_main = app.main
+CliError = app.CliError
+resolve_allowed_commands = app.resolve_repo_allowed_commands
 
 
 @pytest.fixture(scope="module")
@@ -101,3 +105,70 @@ def test_pipeline_missing_requests_file_returns_error(
     error_payload = json.loads(captured.err)
     assert error_payload["status"] == "error"
     assert "File not found" in error_payload["message"]
+
+
+def test_pipeline_disallowed_command_returns_error(
+    samples_dir: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Disallowed repository commands should yield a clear CLI error."""
+    monkeypatch.setenv("YURAGI_REPO_ALLOW_CMDS", "rg")
+    monkeypatch.delenv("YURAGI_CLI_CONFIG", raising=False)
+
+    exit_code = cli_main(
+        [
+            "run-crud-pipeline",
+            "--requests",
+            str(samples_dir / "crud_requests.json"),
+            "--repo-command",
+            "git",
+            "--db-fixture",
+            str(samples_dir / "db_fixture.json"),
+        ],
+    )
+
+    assert exit_code == 1
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    payload = json.loads(captured.err)
+    assert payload["status"] == "error"
+    assert "allowlist" in payload["message"].lower()
+
+
+def test_resolve_allowed_commands_from_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Environment variables should override default allowlists."""
+    monkeypatch.setenv("YURAGI_REPO_ALLOW_CMDS", "rg,git")
+    monkeypatch.delenv("YURAGI_CLI_CONFIG", raising=False)
+
+    allowed = resolve_allowed_commands()
+    assert allowed == {"rg", "git"}
+
+
+def test_resolve_allowed_commands_from_config(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """The CLI configuration file should provide the allowlist when set."""
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({"repo_allowed_commands": ["rg", "git"]}))
+
+    monkeypatch.delenv("YURAGI_REPO_ALLOW_CMDS", raising=False)
+    monkeypatch.setenv("YURAGI_CLI_CONFIG", str(config_path))
+
+    allowed = resolve_allowed_commands()
+    assert allowed == {"rg", "git"}
+
+
+def test_resolve_allowed_commands_invalid_config(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
+) -> None:
+    """Invalid configuration payloads should raise a CLI error."""
+    config_path = tmp_path / "config.json"
+    config_path.write_text(json.dumps({"repo_allowed_commands": [123]}))
+
+    monkeypatch.delenv("YURAGI_REPO_ALLOW_CMDS", raising=False)
+    monkeypatch.setenv("YURAGI_CLI_CONFIG", str(config_path))
+
+    with pytest.raises(CliError):
+        resolve_allowed_commands()
