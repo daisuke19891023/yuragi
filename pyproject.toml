@@ -9,6 +9,12 @@ dependencies = [
     "pydantic>=2.12.3",
     "pydantic-settings>=2.11.0",
     "ulid>=1.1",
+    "openai>=2.6.1",
+    "openai-agents>=0.4.2",
+    "httpx>=0.28.1",
+    "tenacity>=9.1.2",
+    "rich>=14.2.0",
+    "jsonschema>=4.25.1",
 ] # Update as needed for real project requirements
 
 [project.scripts]
@@ -133,4 +139,10 @@ markers = [
   "slow: marks tests as slow (deselect with '-m \"not slow\"')",
   "integration: marks integration tests",
   "asyncio: marks tests as asyncio"
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.406",
+    "pytest>=8.4.2",
 ]
