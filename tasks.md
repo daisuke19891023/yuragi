@@ -107,6 +107,7 @@
 - **内容**: README（セットアップ／Python API／CLI／FastMCP の使い方）、サンプル入力、用語辞書の例。
 - **DoD**: README の手順がローカルで再現。
 - **Acceptance**: 新規環境で README 手順通りに Python/CLI/MCP の 3 経路が動作。
+- **ステータス**: ✅ README を全面改訂し、Python/CLI/MCP の各経路と付属サンプル（用語辞書含む）を整備済み。
 
 ## T17. 品質・安全性
 - **内容**: PII マスキング、プロンプトに “自由文禁止＋JSON 限定” ガード、CLI allowlist、timeout、ログの秘匿。
