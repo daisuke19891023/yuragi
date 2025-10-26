@@ -1,0 +1,29 @@
+{
+  "tables": {
+    "billing_ledger": {
+      "schema": "public",
+      "exists": true,
+      "row_count": 256,
+      "confidence_delta": 0.0
+    }
+  },
+  "columns": {
+    "billing_ledger": {
+      "schema": "public",
+      "exists": true,
+      "columns": [
+        {
+          "name": "order_id",
+          "data_type": "uuid",
+          "nullable": false
+        },
+        {
+          "name": "checkout_total",
+          "data_type": "numeric",
+          "nullable": false
+        }
+      ],
+      "confidence_delta": 0.0
+    }
+  }
+}

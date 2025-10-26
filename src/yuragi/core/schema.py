@@ -19,7 +19,7 @@ def build_graph_json_schema() -> dict[str, Any]:
     """Return the JSON Schema representation for :class:`Graph`."""
     schema = Graph.model_json_schema()
     schema.setdefault("$schema", SCHEMA_DRAFT_URL)
-    schema.setdefault("title", "YuragiGraph")
+    schema["title"] = "YuragiGraph"
     schema.setdefault("$id", "https://schemas.yuragi.dev/graph.json")
 
     graph_properties = schema.get("properties", {})

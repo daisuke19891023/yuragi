@@ -1,14 +1,18 @@
-"""Entry point placeholder for the yuragi CLI."""
+"""Entry point for the yuragi CLI."""
 
 from __future__ import annotations
 
-def main() -> None:
-    """Exit until the dedicated CLI implementation is ready."""
-    message = (
-        "The yuragi CLI is not implemented yet. "
-        "Use the library API instead while development continues."
-    )
-    raise SystemExit(message)
+from typing import TYPE_CHECKING, NoReturn
+
+from yuragi.interfases.cli.app import main as cli_main
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+
+def main(argv: Sequence[str] | None = None) -> NoReturn:
+    """Delegate to the CLI implementation and terminate with its exit code."""
+    raise SystemExit(cli_main(argv))
 
 
 if __name__ == "__main__":  # pragma: no cover - manual execution guard

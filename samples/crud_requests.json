@@ -1,0 +1,11 @@
+[
+  {
+    "description": "Billing service writes totals into the ledger table during checkout.",
+    "service": "BillingService",
+    "table_hint": "billing_ledger",
+    "columns_hint": ["checkout total"],
+    "where_hint": ["order_id"],
+    "path": "src/billing.py",
+    "span": "L25"
+  }
+]
