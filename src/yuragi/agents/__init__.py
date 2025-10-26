@@ -5,9 +5,11 @@ from .normalize_agent import (
     NormalizationRequest,
     TermGlossary,
 )
+from .verify_agent import VerifyAgent
 
 __all__ = [
     "NormalizationRequest",
     "NormalizeAgent",
     "TermGlossary",
+    "VerifyAgent",
 ]
