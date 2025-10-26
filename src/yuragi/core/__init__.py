@@ -1,5 +1,15 @@
 """Core domain modules for yuragi."""
 
+from .errors import (
+    ExposureConfigurationError,
+    ExposureError,
+    ExposureStateError,
+    GraphValidationError,
+    LLMClientError,
+    OrchestrationError,
+    YuragiError,
+    YuragiValidationError,
+)
 from .models import (
     CRUDAction,
     CodeLocation,
@@ -37,11 +47,19 @@ __all__ = [
     "EdgeType",
     "Evidence",
     "EvidenceType",
+    "ExposureConfigurationError",
+    "ExposureError",
+    "ExposureStateError",
     "FieldSnapshot",
     "Graph",
+    "GraphValidationError",
+    "LLMClientError",
     "Node",
     "NodeType",
+    "OrchestrationError",
     "SchemaChange",
+    "YuragiError",
+    "YuragiValidationError",
     "build_graph_json_schema",
     "calculate_confidence",
     "detect_breaking_changes",

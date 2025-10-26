@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, cast
 import pytest
 
 from yuragi.agents import NormalizationRequest, TermGlossary
+from yuragi.core.errors import GraphValidationError
 from yuragi.core.models import Edge, EdgeType, Evidence, EvidenceType, Graph, Node, NodeType
 from yuragi.pipelines import CrudNormalizationPipeline, PipelineOutput, PipelineOutputFormat
 from yuragi.tools.repo import SearchQuery
@@ -231,5 +232,5 @@ def test_pipeline_requires_evidence() -> None:
         orchestrator=cast("Any", _StubOrchestrator(graph=graph)),
     )
 
-    with pytest.raises(ValueError, match="missing evidence"):
+    with pytest.raises(GraphValidationError, match="missing evidence"):
         pipeline.run([NormalizationRequest(description="A reads resource")])

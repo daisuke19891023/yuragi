@@ -6,6 +6,7 @@ import os
 import typing
 from typing import TYPE_CHECKING
 
+from yuragi.core.errors import ExposureConfigurationError
 from yuragi.interfases.cli.app import CLIExposure
 from yuragi.interfases.mcp.server_fastmcp import MCPExposure
 
@@ -24,7 +25,7 @@ def make_exposure(kind: str) -> Exposure:
         factory = _EXPOSURE_FACTORIES[kind]
     except KeyError:
         message = f"unknown exposure kind: {kind}"
-        raise ValueError(message) from None
+        raise ExposureConfigurationError(message) from None
     return factory()
 
 

@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from jsonschema import Draft202012Validator
 
+from yuragi.core.errors import GraphValidationError
 from yuragi.core.models import Edge, Graph
 from yuragi.core.schema import build_graph_json_schema
 
@@ -80,7 +81,7 @@ class CrudNormalizationPipeline:
                 self._write_ndjson(prepared, target.path)
             else:  # pragma: no cover - defensive future-proofing
                 message = f"Unsupported output format: {target.format}"
-                raise ValueError(message)
+                raise GraphValidationError(message)
 
         return prepared
 
@@ -96,7 +97,7 @@ class CrudNormalizationPipeline:
                 "Graph edge is missing evidence: "
                 f"{example.from_id} -> {example.to_id} ({example.type})"
             )
-            raise ValueError(message)
+            raise GraphValidationError(message)
 
     def _prepare_graph(self, graph: Graph) -> Graph:
         nodes = [node.model_copy(deep=True) for node in graph.nodes]

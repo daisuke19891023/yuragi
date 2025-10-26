@@ -16,6 +16,7 @@ from yuragi.agents import (
     TermGlossary,
     VerifyAgent,
 )
+from yuragi.core.errors import ExposureConfigurationError, ExposureStateError
 from yuragi.core.models import CRUDActionList, Edge, Graph, Node
 from yuragi.pipelines import CrudNormalizationPipeline
 from yuragi.tools.db import (
@@ -291,11 +292,11 @@ class DatabaseOptions(BaseModel):
                 "Custom database configuration is not permitted for FastMCP "
                 f"(received {formatted}). Use fixtures or an allowlisted preset"
             )
-            raise ValueError(message)
+            raise ExposureConfigurationError(message)
 
         if self.fixture is not None and self.preset is not None:
             message = "Database fixture and preset cannot be combined"
-            raise ValueError(message)
+            raise ExposureConfigurationError(message)
 
         if self.fixture is not None:
             adapter = _FixtureDatabaseAdapter(self.fixture)
@@ -306,7 +307,7 @@ class DatabaseOptions(BaseModel):
             config = allowlist.get(self.preset)
             if config is None:
                 message = f"Database preset {self.preset!r} is not permitted"
-                raise ValueError(message)
+                raise ExposureConfigurationError(message)
             adapter = config.create_adapter()
             return adapter, self.schema_name
 
@@ -574,7 +575,7 @@ class MCPExposure:
             if raw_allowlist is not None:
                 if not isinstance(raw_allowlist, Mapping):
                     message = "database_allowlist must be a mapping of preset names to configurations"
-                    raise ValueError(message)
+                    raise ExposureConfigurationError(message)
                 allowlist = {
                     str(name): AllowedDatabaseConfig.model_validate(value)
                     for name, value in cast("Mapping[str, Any]", raw_allowlist).items()
@@ -608,7 +609,7 @@ class MCPExposure:
         runtime = self._runtime
         if runtime is None:  # pragma: no cover - defensive guard
             message = "FastMCP runtime has not been initialised"
-            raise RuntimeError(message)
+            raise ExposureStateError(message)
         return runtime
 
 

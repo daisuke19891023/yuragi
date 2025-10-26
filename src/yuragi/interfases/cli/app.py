@@ -23,6 +23,7 @@ from yuragi.agents import (
 )
 # The CLI surfaces high-level entry points and therefore imports orchestration
 # utilities lazily to avoid leaking lower-level implementation details.
+from yuragi.core.errors import ExposureError, GraphValidationError
 from yuragi.core.safety import mask_pii, scrub_for_logging
 from yuragi.core.schema import build_graph_json_schema
 from yuragi.pipelines import CrudNormalizationPipeline, PipelineOutput, PipelineOutputFormat
@@ -46,7 +47,7 @@ from yuragi.tools.repo import (
 )
 
 
-class CliError(RuntimeError):
+class CliError(ExposureError):
     """Exception raised for anticipated CLI failures."""
 
     def __init__(self, message: str, *, exit_code: int = 1, details: Any | None = None) -> None:
@@ -76,7 +77,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         cli_error = CliError("Invalid payload", exit_code=1, details=error.errors())
         _emit_error(cli_error)
         exit_code = cli_error.exit_code
-    except (RepoAdapterError, DatabaseToolError, OrchestrationError) as error:
+    except (
+        RepoAdapterError,
+        DatabaseToolError,
+        OrchestrationError,
+        GraphValidationError,
+    ) as error:
         cli_error = CliError(str(error), exit_code=1)
         _emit_error(cli_error)
         exit_code = cli_error.exit_code

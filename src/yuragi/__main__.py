@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, NoReturn
 
+from yuragi.core.errors import ExposureConfigurationError
 from yuragi.interfases.factory import resolve_exposure_from_environment
 
 if TYPE_CHECKING:
@@ -16,7 +17,7 @@ def main(argv: Sequence[str] | None = None) -> NoReturn:
     """Resolve the requested exposure and delegate execution to it."""
     try:
         exposure = resolve_exposure_from_environment()
-    except ValueError as error:
+    except ExposureConfigurationError as error:
         raise SystemExit(str(error)) from error
 
     config: Mapping[str, Any] | None = None
