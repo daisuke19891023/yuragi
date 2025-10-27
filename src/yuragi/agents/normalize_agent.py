@@ -23,6 +23,11 @@ from agents import Agent
 from agents.tracing import agent_span, function_span, generation_span, trace
 
 from yuragi.core.models import CRUDAction, CRUDActionList, CodeLocation
+from yuragi.llm.prompts import (
+    NormalizationFewShot,
+    build_normalization_system_prompt,
+    default_normalization_few_shots,
+)
 from yuragi.core.safety import scrub_for_logging
 
 CRUDVerb = Literal["INSERT", "UPDATE", "DELETE", "SELECT"]
@@ -152,66 +157,6 @@ class NormalizationRequest:
         return []
 
 
-def _default_few_shots() -> list[tuple[NormalizationRequest, CRUDAction]]:
-    """Provide illustrative examples embedded into the agent instructions."""
-    return [
-        (
-            NormalizationRequest(
-                description="Order API persists checkout totals into billing_ledger",
-                service="OrderAPI",
-            ),
-            CRUDAction(
-                service="OrderAPI",
-                table="billing_ledger",
-                action="INSERT",
-                columns=["checkout_total"],
-                where_keys=["order_id"],
-                code_locations=[],
-                confidence=0.8,
-            ),
-        ),
-        (
-            NormalizationRequest(
-                description="Nightly vacuum prunes stale sessions from session_store",
-                service="SessionSweeper",
-            ),
-            CRUDAction(
-                service="SessionSweeper",
-                table="session_store",
-                action="DELETE",
-                columns=[],
-                where_keys=["last_seen_at"],
-                code_locations=[],
-                confidence=0.7,
-            ),
-        ),
-    ]
-
-
-def _format_instructions(glossary: TermGlossary, few_shots: Sequence[tuple[NormalizationRequest, CRUDAction]]) -> str:
-    """Generate a deterministic instruction string for documentation and tracing."""
-    alias_section = ["- services:"]
-    for alias, canonical in sorted(glossary.service_aliases.items()):
-        alias_section.append(f"  - '{alias}' -> '{canonical}'")
-    alias_section.append("- tables:")
-    for alias, canonical in sorted(glossary.table_aliases.items()):
-        alias_section.append(f"  - '{alias}' -> '{canonical}'")
-    alias_section.append("- columns:")
-    for alias, canonical in sorted(glossary.column_aliases.items()):
-        alias_section.append(f"  - '{alias}' -> '{canonical}'")
-
-    shot_lines: list[str] = ["Few-shot normalisations:"]
-    for request, action in few_shots:
-        shot_lines.append(f"- input: {request.description}")
-        shot_lines.append(f"  output: {action.action} on {action.table} (service {action.service})")
-
-    return (
-        "Normalize ambiguous CRUD descriptions. Use the glossary to map alias terms "
-        "to canonical identifiers and prefer deterministic outputs.\n" + "\n".join(alias_section)
-        + "\n" + "\n".join(shot_lines)
-    )
-
-
 def _to_optional_str(value: object) -> str | None:
     if value is None:
         return None
@@ -265,7 +210,7 @@ class NormalizeAgent:
             },
         ),
     )
-    few_shots: Sequence[tuple[NormalizationRequest, CRUDAction]] = field(default_factory=_default_few_shots)
+    few_shots: Sequence[NormalizationFewShot] = field(default_factory=default_normalization_few_shots)
     workflow_name: str = "normalize_crud"
     agent_name: str = "normalize-crud"
     _agent: Agent = field(init=False)
@@ -273,7 +218,7 @@ class NormalizeAgent:
 
     def __post_init__(self) -> None:
         """Instantiate the Agents SDK object with static prompts."""
-        instructions = _format_instructions(self.glossary, self.few_shots)
+        instructions = build_normalization_system_prompt(self.glossary, self.few_shots)
         self._agent = Agent(
             name=self.agent_name,
             instructions=instructions,
